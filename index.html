@@ -26,12 +26,14 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
+    var chat = document.getElementById('messages')
     window.addEventListener('load', function(){
       document.getElementById('messages').style.height = window.innerHeight - 41+'px';
     })
     window.addEventListener('resize', function(){
       document.getElementById('messages').style.height = window.innerHeight - 41+'px';
     })
+    
     $('#m, button').prop('disabled', true);
       var socket = io();
 
@@ -63,29 +65,16 @@
           $('#messages').children('li').css('background-color','white');
         },100)
         $('#m').val('');
-        window.scrollTo(0, 26);
+        chat.scrollTop = chat.scrollHeight;
         return false;
       });
 
       socket.on('chat message', function(msg){
         var nombre = msg.replace(/\s.*/, '');
         var mensaje = msg.substr(nombre.length);
-        /*var ul = document.getElementById('messages');
-        var li = document.createElement('li');
-        var nom = document.createElement('p');
-        var m = document.createElement('p');
-        nom.style.fontWeight = 'bold';
-        nom.style.display = 'inline-block';
-        m.style.display = 'inline-block';
-        nom.innerHTML = nombre;
-        m.innerHTML = '&nbsp;' + mensaje;
-        ul.appendChild(li)
-        li.appendChild(nom);
-        li.appendChild(m);*/
         $('#messages').append($('<li><p style="font-weight: bold; display: inline-block">'+nombre+'</p><p style="display: inline-block">&nbsp;'+mensaje+'</p></li>'));
-        //$('#messages').append($('<li>').text(msg));
-        window.scrollTo(0, 26);
-      })
+        chat.scrollTop = chat.scrollHeight;
+      });
 
     </script>
   </body>
