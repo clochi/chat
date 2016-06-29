@@ -9,8 +9,10 @@
       .form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       .form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       .form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; overflow-y: auto;}
+      #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; width: 80%; display: inline-block; float: left;}
       #messages li { padding: 5px 10px; transition: all 3s}
+      #conectadosCont {width: 20%; display: inline-block; padding: 20px; margin-top: 20px;}
+      #conectadosCont #conectadosLista li{list-style: none;}
       /*#messages li:nth-child(odd) { background: #F5F5F5; }*/
       .nick{position: absolute; top: 10px; right: 10px}
       #nick{border:none;}
@@ -20,25 +22,26 @@
   <body>
     <div class="nick">Nick: <form action="" class="formNick" style="display: inline-block"><input id="nick" autocomplete="off" type="text" placeholder="Tu nombre :)"></form></div>
     <ul id="messages"></ul>
+    <div id="conectadosCont"><h4>Conectados:</h4><ul id="conectadosLista"></ul></div>
     <form action="" class="form">
-      <input id="m" autocomplete="off" /><button>Send</button>
+      <input id="m" autocomplete="off" /><button>Enviar</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-    var chat = document.getElementById('messages')
+    var chat = document.getElementById('messages');
     window.addEventListener('load', function(){
       document.getElementById('messages').style.height = window.innerHeight - 41+'px';
-    })
+    });
     window.addEventListener('resize', function(){
       document.getElementById('messages').style.height = window.innerHeight - 41+'px';
-    })
+    });
     
     $('#m, button').prop('disabled', true);
       var socket = io();
 
       $('.formNick').submit(function(){
-        if ($('#nick').val() == ''){
+        if ($('#nick').val() === ''){
           return false;
         }
         socket.emit('nick', $('#nick').val());
@@ -46,33 +49,42 @@
         $('#m').focus();
         $('.nick').fadeOut(600);
         return false;
-      })
+      });
 
       socket.on('ingreso', function(msg){
-        $('#messages').append($('<li style="color: blue; font-style: italic">').text(msg))
-      })
+
+        $('#messages').append($('<li style="color: blue; font-style: italic">').text(msg));
+      });
       socket.on('salida', function(msg){
-        $('#messages').append($('<li style="color: red; font-style: italic">').text(msg))
-      })
+        $('#messages').append($('<li style="color: red; font-style: italic">').text(msg));
+      });
+
+      socket.on('conectados', function(usuarios){
+        $('#conectadosLista').html('');
+        for(var i = 0; i < usuarios.length; i++){
+          $('#conectadosLista').append($('<li>').html(usuarios[i]));
+        }
+
+      });
 
       $('.form').submit(function(){
-        if ($('#m').val() == ''){
+        if ($('#m').val() === ''){
           return false;
         }
         socket.emit('chat message', $('#m').val());
         $('#messages').append($('<li style="background-color: cornsilk">').text($('#m').val()));
         setTimeout(function(){
           $('#messages').children('li').css('background-color','white');
-        },100)
+        },100);
         $('#m').val('');
         chat.scrollTop = chat.scrollHeight;
         return false;
       });
 
       socket.on('chat message', function(msg){
-        var nombre = msg.replace(/\s.*/, '');
-        var mensaje = msg.substr(nombre.length);
-        $('#messages').append($('<li><p style="font-weight: bold; display: inline-block">'+nombre+'</p><p style="display: inline-block">&nbsp;'+mensaje+'</p></li>'));
+        //var nombre = msg.replace(/\s.*/, '');
+        //var mensaje = msg.substr(nombre.length);
+        $('#messages').append($('<li><p style="font-weight: bold; color: '+msg.color+'; display: inline-block">'+msg.usuario+': </p><p style="display: inline-block">&nbsp;'+msg.mensaje+'</p></li>'));
         chat.scrollTop = chat.scrollHeight;
       });
 

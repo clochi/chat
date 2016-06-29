@@ -5,41 +5,38 @@ var io = require('socket.io')(http);
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
-//Este sirve para mostrar cuando se conecta y desconecta un usuario.
-/*io.on('connection', function(socket){
-  console.log('a user connected');
-  socket.on('disconnect', function(){
-    console.log('user disconnected');
-  });
-});*/
-//Este sirve para enviar el mensaje a la consola.
-/*io.on('connection', function(socket){
-  socket.on('chat message', function(msg){
-    console.log('message: '+msg);
-  });
-});*/
-
+var usuarios = [];
+var conectados = [];
+var colores = ['#32948A', '#F27405', '#B23203', '#793F52', '#FF523B', '#99C40A', '#C88900', '#363D9B', '#673B7E', '#1CB9D5', '#846600', '#DDCC0B', '#D9006A', '#19A901', '#034402', '#FE0303', '#BA33DC', '#544759', '#A197A6'];
+function updateConnected(sock, conected){
+  io.emit('conectados', conectados.sort());
+}
 io.on('connection', function(socket){
-  var nombre = "";
   socket.on('nick', function(nick){
-    nombre = nick;
-    socket.broadcast.emit('ingreso', nombre + " acaba de ingresar");
-    console.log(nombre + ' se ha conectado');
+    socket.usuario = nick;
+    socket.usuarioColor = colores[Math.floor(Math.random() * colores.length)];
+    usuarios.push(socket);
+    conectados.push(socket.usuario);
+    socket.broadcast.emit('ingreso', socket.usuario + " acaba de ingresar");
+    updateConnected(socket, conectados);
+    console.log(socket.usuario + ' se ha conectado. %d conectados', usuarios.length);
   });
   socket.on('disconnect', function(){
-    if (nombre !== ''){
-      socket.broadcast.emit('salida', nombre + ' acaba de salir');
-      console.log(nombre + ' se ha desconectado');
+    if (socket.usuario !== undefined){
+      conectados.splice(conectados.indexOf(socket.usuario), 1);
+      usuarios.splice(socket, 1);
+      socket.broadcast.emit('salida', socket.usuario + ' acaba de salir');
+      updateConnected(socket, conectados);
+      console.log(socket.usuario + ' se ha desconectado. %d conectados', usuarios.length);
     }else{
       console.log('Alguien refrescó el navegador');
     }
   });
   socket.on('chat message', function(msg){
-    //io.emit('chat message', nombre + " dice: " + msg);
-    socket.broadcast.emit('chat message', nombre+ ' dice: ' + msg);
+    socket.broadcast.emit('chat message', {usuario: socket.usuario, mensaje: msg, color: socket.usuarioColor});
   });
 });
 
 http.listen(3000, function(){
-  console.log('listening on *:3000');
+  console.log('Chat server initialized');
 });
